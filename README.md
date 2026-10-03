@@ -7,7 +7,7 @@ This repository contains our submission for the Gator Quant Hacks Hardware Track
 
 ## Hardware & Toolchain
 * **Board**: Tang Nano 20K
-* **HDL**: Verilog (or VHDL)
+* **HDL**: Verilog
 * **Gowin EDA Version**: V1.9.11.03 Education
 * **Device Configuration**: GW2AR-LV18QN88C8/I7
 
@@ -22,9 +22,5 @@ This repository contains our submission for the Gator Quant Hacks Hardware Track
 4. Program the generated `bitstream/project.fs` file onto the board.
 
 ## Performance Results
-* **Total LUT Count**: [Insert count from Synthesis Report]
-* **Latency**: [Insert latency measured from the Python test script]
-
-## External Resources & Limitations
-* [List any external IP or state "None"]
-* [List any known bugs or state "None"]
+* **Total LUT Count**: 271
+* **Latency**: 16.752 ms
