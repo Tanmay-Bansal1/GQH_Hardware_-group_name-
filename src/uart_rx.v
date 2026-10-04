@@ -1,104 +1,33 @@
-module uart_rx #(
-    parameter CLKS_PER_BIT = 234 // 27 MHz clock / 115200 baud
-)(
-    input  wire       clk,
-    input  wire       rx_serial, // Raw incoming serial signal
-    output reg        rx_dv,     // Data Valid pulse (1 clock cycle)
-    output reg  [7:0] rx_byte    // 8-bit output byte
+
+module uart_rx #(parameter CLKS_PER_BIT = 234)(
+    input  wire        clk,
+    input  wire        rx_serial,
+    output reg  [63:0] pkt = 64'd0,
+    output reg         pkt_done = 1'b0   // 1-clk pulse, mid stop-bit of 8th byte
 );
-
-    // State Machine States
-    localparam s_IDLE         = 3'b000;
-    localparam s_RX_START_BIT = 3'b001;
-    localparam s_RX_DATA_BITS = 3'b010;
-    localparam s_RX_STOP_BIT  = 3'b011;
-    localparam s_CLEANUP      = 3'b100;
-
-    reg [2:0] state = s_IDLE;
-    reg [7:0] clk_count = 0;
-    reg [2:0] bit_index = 0; 
-    
-    // Double-register the incoming rx signal to prevent metastability
-    reg rx_data_r = 1'b1;
-    reg rx_data   = 1'b1;
-    
-    always @(posedge clk) begin
-        rx_data_r <= rx_serial;
-        rx_data   <= rx_data_r;
-    end
+    localparam HALF = (CLKS_PER_BIT - 1) / 2;
+    reg s0 = 1'b1, s1 = 1'b1;
+    reg [1:0] st = 2'd0;                 // 0 idle, 1 start, 2 data, 3 stop
+    reg [7:0] c  = 8'd0;
+    reg [5:0] nb = 6'd0;                 // data bits received; wraps to 0 after 64
+    wire tick = (c == CLKS_PER_BIT - 1);
 
     always @(posedge clk) begin
-        case (state)
-            s_IDLE: begin
-                rx_dv     <= 1'b0;
-                clk_count <= 0;
-                bit_index <= 0;
-                
-                // Start bit detected (line drops to 0)
-                if (rx_data == 1'b0) begin
-                    state <= s_RX_START_BIT;
-                end else begin
-                    state <= s_IDLE;
+        s0 <= rx_serial; s1 <= s0;
+        pkt_done <= 1'b0;
+        if (st == 2'd0) begin
+            if (!s1) begin st <= 2'd1; c <= CLKS_PER_BIT - 1 - HALF; end
+        end else if (tick) begin
+            c <= 8'd0;
+            case (st)
+                2'd1: st <= s1 ? 2'd0 : 2'd2;           // still low at mid-start?
+                2'd2: begin
+                    pkt <= {s1, pkt[63:1]};
+                    nb  <= nb + 1'b1;
+                    if (nb[2:0] == 3'd7) st <= 2'd3;
                 end
-            end
-            
-            s_RX_START_BIT: begin
-                // Wait until the middle of the start bit
-                if (clk_count == (CLKS_PER_BIT - 1) / 2) begin
-                    if (rx_data == 1'b0) begin // Verify it is still low
-                        clk_count <= 0;
-                        state     <= s_RX_DATA_BITS;
-                    end else begin
-                        state     <= s_IDLE;
-                    end
-                end else begin
-                    clk_count <= clk_count + 1'b1;
-                    state     <= s_RX_START_BIT;
-                end
-            end
-            
-            s_RX_DATA_BITS: begin
-                // Wait one full bit duration
-                if (clk_count < CLKS_PER_BIT - 1) begin
-                    clk_count <= clk_count + 1'b1;
-                    state     <= s_RX_DATA_BITS;
-                end else begin
-                    clk_count <= 0;
-                    
-                    // The protocol sends the least significant bit first
-                    rx_byte[bit_index] <= rx_data; 
-                    
-                    // Check if we have received all 8 bits
-                    if (bit_index < 7) begin
-                        bit_index <= bit_index + 1'b1;
-                        state     <= s_RX_DATA_BITS;
-                    end else begin
-                        bit_index <= 0;
-                        state     <= s_RX_STOP_BIT;
-                    end
-                end
-            end
-            
-            s_RX_STOP_BIT: begin
-                // Wait one full bit duration for the stop bit
-                if (clk_count < CLKS_PER_BIT - 1) begin
-                    clk_count <= clk_count + 1'b1;
-                    state     <= s_RX_STOP_BIT;
-                end else begin
-                    rx_dv     <= 1'b1; // Pulse Data Valid high
-                    clk_count <= 0;
-                    state     <= s_CLEANUP;
-                end
-            end
-            
-            s_CLEANUP: begin
-                rx_dv <= 1'b0; // Reset Data Valid
-                state <= s_IDLE;
-            end
-            
-            default: begin
-                state <= s_IDLE;
-            end
-        endcase
+                default: begin st <= 2'd0; pkt_done <= (nb == 6'd0); end
+            endcase
+        end else c <= c + 1'b1;
     end
 endmodule
