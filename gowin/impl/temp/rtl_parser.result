@@ -1,0 +1,54 @@
+[
+ {
+  "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/top.v",
+  "InstLine" : 1,
+  "InstName" : "top",
+  "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/top.v",
+  "ModuleLine" : 1,
+  "ModuleName" : "top",
+  "SubInsts" : [
+   {
+    "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/top.v",
+    "InstLine" : 13,
+    "InstName" : "u_rx",
+    "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/uart_rx.v",
+    "ModuleLine" : 6,
+    "ModuleName" : "uart_rx"
+   },
+   {
+    "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/top.v",
+    "InstLine" : 15,
+    "InstName" : "u_core",
+    "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/trade_core.v",
+    "ModuleLine" : 1,
+    "ModuleName" : "trade_core",
+    "SubInsts" : [
+     {
+      "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/trade_core.v",
+      "InstLine" : 26,
+      "InstName" : "eA",
+      "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/moving_average.v",
+      "ModuleLine" : 1,
+      "ModuleName" : "moving_average"
+     },
+     {
+      "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/trade_core.v",
+      "InstLine" : 27,
+      "InstName" : "eB",
+      "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/moving_average.v",
+      "ModuleLine" : 1,
+      "ModuleName" : "moving_average"
+     }
+    ]
+   },
+   {
+    "InstFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/top.v",
+    "InstLine" : 17,
+    "InstName" : "u_tx",
+    "ModuleFile" : "C:/Users/tanma/TanmayUF/Gator Quant Hacks/GQH_Hardware_Stark-Silicon/gowin/src/uart_tx.v",
+    "ModuleLine" : 4,
+    "ModuleName" : "uart_tx"
+   }
+  ]
+ }
+]
