@@ -1,6 +1,6 @@
-# GQH_Hardware_-group_name-
+# GQH_Hardware_Stark-Silicon
 
-# [Team Name] - Silicon Trade Core
+# Stark Industries - Silicon HFT Core
 
 ## Overview
 This repository contains our submission for the Gator Quant Hacks Hardware Track. The system implements a 16-sample moving-average trading algorithm directly on the Tang Nano 20K FPGA. All UART parsing, state management, mathematical computation, and response generation happen on-chip.
@@ -13,7 +13,7 @@ This repository contains our submission for the Gator Quant Hacks Hardware Track
 
 ## Project Structure
 * **Top-Level Module**: `top` (located in `src/top.v`)
-* **Host-Side Tooling**: `21_quick_uart_test.py` and `22_robust_uart_test.py` used for local testing.
+* **Host-Side Tooling**: `21_quick_uart_test.py`, `22_robust_uart_test.py` and '22_robust_uart_test_fullrange.py' used for local testing.
 
 ## Build & Programming Instructions
 1. Open Gowin EDA and load the project from the `gowin/` directory.
