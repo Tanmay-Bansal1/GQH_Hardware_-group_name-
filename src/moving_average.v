@@ -1,61 +1,40 @@
+
 module moving_average (
     input  wire        clk,
-    input  wire        reset,      // Triggered by Index 0 to clear session state
-    input  wire        enable,     // High when the packet parser routes a new price
-    input  wire [15:0] price_in,   // Unsigned 16-bit current price
-    output reg  [7:0]  action_out  // Output action code (0x00, 0x01, or 0x02)
+    input  wire        clr,     
+    input  wire        upd,
+    input  wire [15:0] price,
+    input  wire [3:0]  ptr,
+    input  wire        full,    
+    output reg  [1:0]  act = 2'd0 
 );
-    // Action Code Constants
-    localparam ACT_NONE = 8'h00;
-    localparam ACT_SELL = 8'h01;
-    localparam ACT_BUY  = 8'h02;
+    reg [15:0] mem [0:15];
+    reg [15:0] oldest_q = 16'd0;
+    reg [19:0] sum = 20'd0;
+    reg        pgt = 1'b0, plt = 1'b0;
 
-    // State Variables
-    reg [15:0] window [0:15];      // Circular buffer, never reset (RAM-friendly)
-    reg [3:0]  ptr        = 4'd0;
-    reg        full       = 1'b0;  // Set once 16 samples are in the window
-    reg [19:0] sum        = 20'd0; // 20-bit rolling sum
-    reg [15:0] prev_price = 16'd0; // Previous price
-
-    // Combinational Math
-    // During warm-up, subtract 0 so stale window contents don't matter
-    wire [15:0] oldest_price = full ? window[ptr] : 16'd0;
-    wire [19:0] new_sum      = sum - oldest_price + price_in;
-    wire [15:0] old_avg      = sum[19:4];      // floor(sum / 16)
-    wire [15:0] new_avg      = new_sum[19:4];  // floor(new_sum / 16)
-
-    // Window memory: write only, no reset, so the tool can infer RAM
     always @(posedge clk) begin
-        if (enable)
-            window[ptr] <= price_in;
+        oldest_q <= mem[ptr];
+        if (upd) mem[ptr] <= price;
     end
 
-    // Control and decision logic
-    always @(posedge clk) begin
-        if (reset) begin
-            ptr        <= 4'd0;
-            full       <= 1'b0;
-            sum        <= 20'd0;
-            prev_price <= 16'd0;
-            action_out <= ACT_NONE;
-        end else if (enable) begin
-            ptr        <= ptr + 1'b1;
-            sum        <= new_sum;
-            prev_price <= price_in;
+    wire [15:0] oldest = full ? oldest_q : 16'd0;
+    wire [16:0] delta  = {1'b0, price} - {1'b0, oldest};
+    wire [19:0] nsum   = sum + {{3{delta[16]}}, delta};
+    wire [15:0] navg   = nsum[19:4];
+    wire [16:0] d      = {1'b0, price} - {1'b0, navg};   
+    wire        lt     = d[16];
+    wire        gt     = ~d[16] & (d[15:0] != 16'd0);
 
-            if (!full) begin
-                // Warm-up phase: fill the window and output NONE
-                if (ptr == 4'd15)
-                    full <= 1'b1;
-                action_out <= ACT_NONE;
-            end else if ((prev_price <= old_avg) && (price_in > new_avg)) begin
-                // Upward crossing
-                action_out <= ACT_BUY;
-            end else if ((prev_price >= old_avg) && (price_in < new_avg)) begin
-                // Downward crossing
-                action_out <= ACT_SELL;
-            end
-            // Otherwise, action_out holds the last action
+    always @(posedge clk) begin
+        if (clr)      sum <= 20'd0;
+        else if (upd) sum <= nsum;
+        if (upd) begin
+            pgt <= gt;
+            plt <= lt;
+            if (!full)             act <= 2'b00;
+            else if (!pgt && gt)   act <= 2'b10;   // BUY
+            else if (!plt && lt)   act <= 2'b01;   // SELL
         end
     end
 endmodule
